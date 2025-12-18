@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Routes, Route, HashRouter } from 'react-router-dom';
+import { Routes, Route, BrowserRouter } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import WorkoutGenerator from './pages/WorkoutGenerator';
@@ -15,7 +16,7 @@ const App: React.FC = () => {
   return (
     <LanguageProvider>
       <SubscriptionProvider>
-        <HashRouter>
+        <BrowserRouter>
           <Layout>
             <Routes>
               <Route path="/" element={<Dashboard />} />
@@ -27,7 +28,7 @@ const App: React.FC = () => {
               <Route path="/premium" element={<Premium />} />
             </Routes>
           </Layout>
-        </HashRouter>
+        </BrowserRouter>
       </SubscriptionProvider>
     </LanguageProvider>
   );
