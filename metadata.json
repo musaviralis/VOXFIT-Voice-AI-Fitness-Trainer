@@ -1,0 +1,8 @@
+{
+  "name": "VOXFIT – Voice AI Fitness Trainer",
+  "description": "Train Smarter. Stay Consistent. VOXFIT is your personalized voice-first AI fitness coach, optimized for Indian lifestyles with custom workouts and Desi diet analysis.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
