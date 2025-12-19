@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Activity, Zap, Play, Dumbbell, Heart, Wind, AlertCircle, Waves, Pause, SkipForward, Square } from 'lucide-react';
+import { Mic, MicOff, Activity, Zap, Play, Dumbbell, Heart, Wind, AlertCircle, Waves, Pause, SkipForward, Square, CheckCircle2, Volume2 } from 'lucide-react';
 import { connectToLiveTrainer } from '../services/geminiService';
 import { float32ToInt16, base64ToUint8Array, pcmToAudioBuffer, arrayBufferToBase64 } from '../services/audioUtils';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -21,12 +21,10 @@ const VoiceTrainer: React.FC = () => {
   // Tracking transcription for complexity analysis
   const currentTranscriptionRef = useRef<string>('');
 
-  // Update status when language changes if not connected
   useEffect(() => {
     if (!isConnected) {
       setStatus(t('voice.status.tap'));
     }
-    // Rotate safety tips
     const tips = [
       t('safety.stop_if_pain'),
       t('safety.hydrate'),
@@ -41,30 +39,21 @@ const VoiceTrainer: React.FC = () => {
     return () => clearInterval(interval);
   }, [language, t, isConnected]);
 
-  // Clear command feedback after 3 seconds
   useEffect(() => {
     if (lastCommand) {
-      const timer = setTimeout(() => setLastCommand(null), 3000);
+      const timer = setTimeout(() => setLastCommand(null), 4000);
       return () => clearTimeout(timer);
     }
   }, [lastCommand]);
 
   const calculateSpeechRate = (text: string): number => {
     if (!text) return 1.0;
-    
-    // Heuristics for "complexity"
-    // 1. Technical/Form Keywords warrant slower speech
-    const formKeywords = ['chest', 'heels', 'back', 'form', 'breath', 'slow', 'shoulder', 'straight', 'hips', 'form', 'posture'];
+    const formKeywords = ['chest', 'heels', 'back', 'form', 'breath', 'slow', 'shoulder', 'straight', 'hips', 'posture'];
     const lowercase = text.toLowerCase();
     const hasFormGuidance = formKeywords.some(kw => lowercase.includes(kw));
-    
-    // 2. Length of instruction
-    // Short prompts (< 30 chars) are usually commands like "Next set" or "Paused"
     const isShortCommand = text.length < 30 && !hasFormGuidance;
-
-    if (isShortCommand) return 1.15; // 15% faster for snappy commands
-    if (hasFormGuidance || text.length > 50) return 0.92; // ~8% slower for clarity during form cues
-    
+    if (isShortCommand) return 1.1; 
+    if (hasFormGuidance || text.length > 50) return 0.95; 
     return 1.0;
   };
 
@@ -90,7 +79,6 @@ const VoiceTrainer: React.FC = () => {
             
             scriptProcessor.onaudioprocess = (e) => {
               const inputData = e.inputBuffer.getChannelData(0);
-              
               let sum = 0;
               for(let i=0; i<inputData.length; i++) sum += inputData[i] * inputData[i];
               const rms = Math.sqrt(sum / inputData.length);
@@ -111,12 +99,10 @@ const VoiceTrainer: React.FC = () => {
           }
         },
         onMessage: async (message) => {
-           // Handle Transcription for rate logic
            if (message.serverContent?.outputTranscription) {
               currentTranscriptionRef.current += message.serverContent.outputTranscription.text;
            }
 
-           // Handle Audio
            const modelTurn = message.serverContent?.modelTurn;
            if (modelTurn?.parts?.[0]?.inlineData?.data) {
              const base64Audio = modelTurn.parts[0].inlineData.data;
@@ -126,11 +112,8 @@ const VoiceTrainer: React.FC = () => {
                setStatus(t('voice.status.speaking'));
                const audioBuffer = pcmToAudioBuffer(pcmData, outputAudioContextRef.current);
                const source = outputAudioContextRef.current.createBufferSource();
-               
-               // Dynamic Rate Adjustment Logic
                const rate = calculateSpeechRate(currentTranscriptionRef.current);
                source.playbackRate.value = rate;
-               
                source.buffer = audioBuffer;
                source.connect(outputAudioContextRef.current.destination);
                source.onended = () => setStatus(t('voice.status.listening'));
@@ -142,30 +125,31 @@ const VoiceTrainer: React.FC = () => {
              }
            }
 
-           // Turn Management
            if (message.serverContent?.turnComplete) {
               currentTranscriptionRef.current = '';
            }
 
-           // Handle Tool Calls (Voice Commands)
            if (message.toolCall) {
-              const responses = message.toolCall.functionCalls.map((fc: any) => {
+              for (const fc of message.toolCall.functionCalls) {
                 if (fc.name === 'controlWorkout') {
                   const action = fc.args.action;
                   setLastCommand({ action, timestamp: Date.now() });
                   
-                  return {
-                    id: fc.id,
-                    name: fc.name,
-                    response: { result: 'ok' }
-                  };
+                  sessionPromise.then(session => {
+                    session.sendToolResponse({
+                      functionResponses: {
+                        id: fc.id,
+                        name: fc.name,
+                        response: { result: 'ok' }
+                      }
+                    });
+                  });
                 }
-                return { id: fc.id, name: fc.name, response: { result: 'unknown tool' } };
-              });
+              }
+           }
 
-              sessionPromise.then(session => {
-                session.sendToolResponse({ functionResponses: responses });
-              });
+           if (message.serverContent?.interrupted) {
+              nextStartTimeRef.current = 0;
            }
         },
         onClose: () => disconnect(),
@@ -199,9 +183,10 @@ const VoiceTrainer: React.FC = () => {
   useEffect(() => { return () => disconnect(); }, []);
 
   const ProtocolCard: React.FC<{ title: string; subtitle: string; icon: React.ReactNode; color: string }> = ({ title, subtitle, icon, color }) => (
-    <div className="glass-card p-6 rounded-2xl flex items-center space-x-5 transition-all cursor-pointer group hover:bg-white/5">
+    <div className="glass-card p-6 rounded-2xl flex items-center space-x-5 transition-all cursor-pointer group hover:bg-white/5 border border-white/5">
       <div className={`p-3 rounded-xl ${color} bg-opacity-10 text-opacity-100 group-hover:scale-110 transition-transform`}>
-        {React.cloneElement(icon as React.ReactElement, { className: `${color}`, size: 24 })}
+        {/* Fix: use any for props during cloneElement to satisfy compiler */}
+        {React.cloneElement(icon as React.ReactElement<any>, { className: `${color}`, size: 24 })}
       </div>
       <div>
         <h3 className="font-bold text-white text-base">{title}</h3>
@@ -215,96 +200,120 @@ const VoiceTrainer: React.FC = () => {
 
   const getCommandFeedback = (action: string) => {
     switch(action) {
-      case 'next_set': return { icon: <SkipForward size={20} />, text: 'Next Set', color: 'bg-primary' };
-      case 'next_exercise': return { icon: <Dumbbell size={20} />, text: 'Next Exercise', color: 'bg-accent' };
-      case 'pause': return { icon: <Pause size={20} />, text: 'Paused', color: 'bg-yellow-500' };
-      case 'resume': return { icon: <Play size={20} />, text: 'Resumed', color: 'bg-green-500' };
-      case 'finish': return { icon: <Square size={20} />, text: 'Finished', color: 'bg-red-500' };
-      default: return { icon: <Activity size={20} />, text: 'Command', color: 'bg-gray-500' };
+      case 'next_set': return { icon: <SkipForward size={24} />, text: 'Command: Next Set', color: 'bg-primary' };
+      case 'next_exercise': return { icon: <Dumbbell size={24} />, text: 'Command: Next Exercise', color: 'bg-accent' };
+      case 'pause': return { icon: <Pause size={24} />, text: 'Command: Paused', color: 'bg-amber-500' };
+      case 'resume': return { icon: <Play size={24} />, text: 'Command: Resumed', color: 'bg-secondary' };
+      case 'finish': return { icon: <Square size={24} />, text: 'Command: Finished', color: 'bg-red-500' };
+      default: return { icon: <Activity size={24} />, text: 'Voice Command Detected', color: 'bg-gray-500' };
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-between min-h-[calc(100vh-140px)] animate-fade-in relative max-w-5xl mx-auto py-8">
       
-      {/* Background Ambience */}
+      {/* Dynamic Aura Background */}
       <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
            <div 
-             className={`w-[600px] h-[600px] rounded-full blur-[150px] transition-all duration-700 ease-out ${isConnected ? 'bg-primary/20' : 'bg-transparent'}`}
-             style={{ transform: `scale(${1 + audioLevel})`, opacity: isConnected ? 0.4 + (audioLevel * 0.3) : 0 }}
+             className={`w-[700px] h-[700px] rounded-full blur-[180px] transition-all duration-700 ease-out ${isConnected ? 'bg-primary/30' : 'bg-transparent'}`}
+             style={{ transform: `scale(${1 + audioLevel * 0.5})`, opacity: isConnected ? 0.3 + (audioLevel * 0.4) : 0 }}
            ></div>
       </div>
 
-      {/* Header */}
-      <div className="text-center z-10 w-full px-4 mb-10">
-        <h1 className="text-5xl font-black text-white mb-4 tracking-tighter">{t('voice.title')}</h1>
+      {/* Header HUD */}
+      <div className="text-center z-10 w-full px-4 mb-10 space-y-6">
+        <h1 className="text-6xl font-black text-white tracking-tighter uppercase italic">VOX_SESSION</h1>
         
-        <div className="flex flex-col items-center gap-4">
-           {/* Status Pill */}
-           <div className={`inline-flex items-center space-x-3 px-5 py-2 rounded-full border backdrop-blur-md transition-all duration-500 ${
-             isConnected ? 'bg-primary/10 border-primary/30' : 'bg-surface border-white/10'
+        <div className="flex flex-col items-center gap-6">
+           {/* Connection Pill */}
+           <div className={`inline-flex items-center space-x-4 px-6 py-2.5 rounded-full border backdrop-blur-xl transition-all duration-500 ${
+             isConnected ? 'bg-primary/20 border-primary/40 shadow-[0_0_20px_rgba(59,130,246,0.3)]' : 'bg-surface border-white/10'
            }`}>
              <div className="relative">
-                <span className={`block w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-primary' : 'bg-gray-500'}`}></span>
-                {isConnected && <span className="absolute inset-0 rounded-full bg-primary animate-ping opacity-75"></span>}
+                <span className={`block w-3 h-3 rounded-full ${isConnected ? 'bg-cyan' : 'bg-gray-600'}`}></span>
+                {isConnected && <span className="absolute inset-0 rounded-full bg-cyan animate-ping opacity-75"></span>}
              </div>
-             <span className={`text-xs font-bold uppercase tracking-[0.15em] ${isConnected ? 'text-white' : 'text-gray-400'}`}>
+             <span className={`text-[11px] font-black uppercase tracking-[0.2em] ${isConnected ? 'text-white' : 'text-gray-500'}`}>
                {status}
              </span>
            </div>
            
-           {/* Command Feedback Overlay */}
+           {/* Voice Command Overlay - High Prominence */}
            {lastCommand && (
-             <div className={`flex items-center space-x-2 px-6 py-3 rounded-xl animate-fade-in-up shadow-2xl ${getCommandFeedback(lastCommand.action).color} text-white`}>
-                {getCommandFeedback(lastCommand.action).icon}
-                <span className="font-bold uppercase tracking-wider text-sm">{getCommandFeedback(lastCommand.action).text}</span>
+             <div className={`flex items-center space-x-4 px-8 py-5 rounded-[2rem] animate-fade-in-up shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border border-white/20 ${getCommandFeedback(lastCommand.action).color} text-white`}>
+                <div className="p-3 bg-white/20 rounded-2xl">
+                   {getCommandFeedback(lastCommand.action).icon}
+                </div>
+                <div className="text-left">
+                   <p className="font-black uppercase tracking-widest text-lg leading-tight">{getCommandFeedback(lastCommand.action).text}</p>
+                   <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest mt-1 flex items-center gap-1">
+                      <Volume2 size={10} /> Voice Confirmed
+                   </p>
+                </div>
+                <CheckCircle2 size={32} className="ml-4 opacity-50" />
              </div>
            )}
 
-           {/* Dynamic Tip (Hide when command feedback is visible for cleaner UI) */}
-           {!lastCommand && (
-            <div className="flex items-center gap-2 text-gray-400 text-xs font-medium animate-fade-in bg-black/40 px-4 py-2 rounded-lg border border-white/5">
-              {isConnected ? <Zap size={12} className="text-yellow-500" /> : <AlertCircle size={12} className="text-accent" />}
+           {/* Hands-free tip */}
+           {!lastCommand && isConnected && (
+             <div className="flex items-center gap-3 text-cyan text-[10px] font-black uppercase tracking-[0.2em] animate-pulse bg-cyan/10 px-6 py-2 rounded-full border border-cyan/20">
+               <Mic size={14} /> Hands-free Active: Say "Next Set" or "Pause"
+             </div>
+           )}
+           
+           {!lastCommand && !isConnected && (
+            <div className="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase tracking-widest animate-fade-in bg-white/5 px-4 py-2 rounded-lg border border-white/5">
+              <AlertCircle size={12} className="text-accent" />
               <span>{safetyTip}</span>
             </div>
            )}
         </div>
       </div>
 
-      {/* Main Interaction Area */}
-      <div className="w-full flex-1 flex flex-col items-center justify-center z-10 space-y-16">
+      {/* Primary Interaction Interaction */}
+      <div className="w-full flex-1 flex flex-col items-center justify-center z-10 space-y-20">
         
-        {/* Central Orb Button */}
+        {/* The VOX Orb */}
         <button
           onClick={isConnected ? disconnect : startSession}
           className="relative group focus:outline-none"
         >
-          {/* Outer Glow Ring */}
-          <div className={`absolute inset-0 rounded-full blur-2xl transition-all duration-700 ${
-            isConnected ? 'bg-primary/40 scale-125' : 'bg-transparent scale-100'
+          <div className={`absolute inset-0 rounded-full blur-[60px] transition-all duration-700 ${
+            isConnected ? 'bg-primary/50 scale-150' : 'bg-transparent scale-100'
           }`}></div>
 
-          <div className={`relative w-48 h-48 rounded-full flex items-center justify-center transition-all duration-500 border border-white/10 shadow-2xl ${
+          <div className={`relative w-56 h-56 rounded-full flex items-center justify-center transition-all duration-500 border border-white/10 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] ${
             isConnected 
-              ? 'bg-gradient-to-b from-red-500 to-red-600 scale-110' 
+              ? 'bg-gradient-vox scale-110 border-white/30' 
               : 'bg-gradient-to-b from-surface to-black hover:scale-105 group-hover:border-primary/50'
           }`}>
              {isConnected ? (
                 <div className="flex flex-col items-center animate-fade-in">
-                   <Waves size={48} className="text-white drop-shadow-md animate-pulse" />
+                   <Waves size={64} className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] animate-pulse" />
+                   <span className="text-white/80 font-black text-[10px] tracking-[0.3em] uppercase mt-4">Streaming_Active</span>
                 </div>
              ) : (
                 <div className="flex flex-col items-center">
-                   <Mic size={48} className="text-white drop-shadow-md mb-3 group-hover:text-primary transition-colors" />
-                   <span className="text-gray-400 font-bold text-xs tracking-widest uppercase group-hover:text-white transition-colors">{t('voice_prompts.speak_now')}</span>
+                   <div className="p-6 bg-white/5 rounded-full mb-4 group-hover:bg-primary/10 transition-colors">
+                      <Mic size={56} className="text-white drop-shadow-lg group-hover:text-cyan transition-colors" />
+                   </div>
+                   <span className="text-gray-500 font-black text-[10px] tracking-[0.3em] uppercase group-hover:text-white transition-colors">Deploy_VOX</span>
                 </div>
              )}
           </div>
+          
+          {/* Audio Visualization Ring */}
+          {isConnected && (
+            <div 
+              className="absolute inset-0 border-4 border-cyan/40 rounded-full opacity-50"
+              style={{ transform: `scale(\${1.2 + audioLevel * 0.2})`, transition: 'transform 0.1s ease-out' }}
+            ></div>
+          )}
         </button>
 
-        {/* Protocols Grid */}
-        <div className={`w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 transition-all duration-700 ${
-          isConnected ? 'opacity-20 pointer-events-none blur-sm scale-95' : 'opacity-100 scale-100'
+        {/* Protocols Dashboard */}
+        <div className={`w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-1000 \${
+          isConnected ? 'opacity-10 pointer-events-none blur-md scale-95' : 'opacity-100 scale-100'
         }`}>
           <ProtocolCard title={t('voice.protocols.warmup')} subtitle={t('guidance.get_ready')} icon={<Zap />} color="text-yellow-500" />
           <ProtocolCard title={t('voice.protocols.squats')} subtitle={t('actions.start_workout')} icon={<Dumbbell />} color="text-primary" />
@@ -313,6 +322,13 @@ const VoiceTrainer: React.FC = () => {
           <ProtocolCard title="Push Ups" subtitle="Start Workout" icon={<Activity />} color="text-secondary" />
           <ProtocolCard title={t('voice.protocols.cooldown')} subtitle={t('guidance.rest')} icon={<Wind />} color="text-cyan-500" />
         </div>
+      </div>
+      
+      {/* Footer Meta */}
+      <div className="z-10 pt-10 opacity-30 flex items-center gap-4 text-[9px] font-black uppercase tracking-[0.5em] text-gray-500">
+         <span>Signal_Encryption: AES_256</span>
+         <span className="w-1 h-1 rounded-full bg-gray-800"></span>
+         <span>Live_Bypassing_Neural_Inhibitors</span>
       </div>
     </div>
   );

@@ -3,9 +3,6 @@ import { GoogleGenAI, Type, Modality, FunctionDeclaration } from "@google/genai"
 import { WorkoutPlan, FitnessGoal, ExperienceLevel, ContentIdea, SupportedLanguage } from "../types";
 import { LANGUAGES, VOICE_SCRIPTS } from "./translations";
 
-const apiKey = process.env.API_KEY || '';
-const ai = new GoogleGenAI({ apiKey });
-
 const getSystemInstruction = (lang: SupportedLanguage) => {
   const langName = LANGUAGES[lang].name;
   return `You are VOXFIT India, a Certified Fitness Trainer and Lifestyle Coach designed specifically for Indian users. 
@@ -31,62 +28,45 @@ const getVoiceSystemInstruction = (lang: SupportedLanguage) => {
   const langName = LANGUAGES[lang].name;
   const scripts = VOICE_SCRIPTS[lang];
 
-  return `You are VOXFIT Voice, an AI Personal Trainer for Indian users.
+  return `You are VOXFIT Voice, an AI Personal Trainer for Indian users. 
+Your primary mode is HANDS-FREE voice control.
+
 CURRENT LANGUAGE SETTING: ${langName}.
 
 VOICE & COMMUNICATION STYLE:
 - Speak ONLY in ${langName}.
 - Use short, simple spoken sentences optimized for voice output.
 - Maintain a calm, encouraging, professional tone.
-- Leave clear pauses between steps.
 
-COMMANDS & TOOLS:
-- Listen for user commands like "Next set", "Next exercise", "Pause workout", "Resume", or "Finish".
-- When you hear these commands, call the 'controlWorkout' tool with the appropriate action ('next_set', 'next_exercise', 'pause', 'resume', 'finish').
-- Confirm the action verbally with a short phrase (e.g., "Moving to next set", "Starting next exercise", "Paused").
+HANDS-FREE WAKE COMMANDS:
+You must monitor the user's speech for the following intents at all times:
+1. "Next set" / "Agla set": Call 'controlWorkout' with 'next_set'.
+2. "Next exercise" / "Agla exercise": Call 'controlWorkout' with 'next_exercise'.
+3. "Pause" / "Ruko" / "Pause workout": Call 'controlWorkout' with 'pause'.
+4. "Resume" / "Chalu karo" / "Begin": Call 'controlWorkout' with 'resume'.
+5. "Finish" / "Khatam" / "Stop": Call 'controlWorkout' with 'finish'.
 
-MANDATORY FORM CUES:
-When the user starts an exercise or asks for guidance, you MUST provide specific, punchy form cues. Use the following exactly where appropriate:
+MANDATORY VERBAL CONFIRMATION:
+Whenever you execute a command, you MUST immediately confirm verbally with a very short phrase before or while calling the tool.
+Examples: 
+- "Theek hai, agla set shuru karte hain." (OK, starting next set)
+- "Workout paused."
+- "Next exercise, let's go."
 
-1. SQUATS:
-"${scripts.form_cues.squat}"
+FORM CUES (MANDATORY):
+When the user starts an exercise or asks for guidance, provide specific, punchy form cues:
+- SQUATS: "${scripts.form_cues.squat}"
+- BENCH PRESS: "${scripts.form_cues.bench}"
+- DEADLIFT: "${scripts.form_cues.deadlift}"
+- OVERHEAD PRESS: "${scripts.form_cues.overhead}"
+- GENERAL: "${scripts.form_cues.general}"
 
-2. BENCH PRESS:
-"${scripts.form_cues.bench}"
-
-3. DEADLIFT:
-"${scripts.form_cues.deadlift}"
-
-4. OVERHEAD PRESS:
-"${scripts.form_cues.overhead}"
-
-5. OTHER EXERCISES:
-Use general cues: "${scripts.form_cues.general}" or generate specific, short cues based on biomechanics (3 short sentences max).
-
-APPROVED SCRIPTS (Use these EXACTLY for their respective sections):
-
-1. WARM-UP:
-"${scripts.warmup}"
-
-2. SQUATS INTRO:
-"${scripts.squats}"
-
-3. SAFETY WARNINGS:
-"${scripts.safety}"
-
-4. MOTIVATION:
-"${scripts.motivation}"
-
-FOR OTHER EXERCISES:
-- Generate guidance in ${langName} following the EXACT style, brevity, and vocabulary level of the scripts above.
-- Do not use complex medical terms. Use everyday language suitable for the region.
-- Count reps slowly in ${langName} numbers.
-`;
+Count reps slowly in ${langName} numbers when asked. Keep it tactical.`;
 };
 
 const workoutControlTool: FunctionDeclaration = {
   name: "controlWorkout",
-  description: "Control the workout session based on user voice commands.",
+  description: "Control the workout session based on user voice commands like 'Next set', 'Pause', or 'Finish'.",
   parameters: {
     type: Type.OBJECT,
     properties: {
@@ -109,6 +89,7 @@ export const connectToLiveTrainer = (
     onError?: (error: any) => void;
   }
 ) => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   return ai.live.connect({
     model: 'gemini-2.5-flash-native-audio-preview-09-2025',
     callbacks: {
@@ -136,7 +117,8 @@ export const generateWorkoutRoutine = async (
   equipment: string,
   language: SupportedLanguage = 'en'
 ): Promise<WorkoutPlan> => {
-  const model = "gemini-2.5-flash";
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const model = "gemini-3-flash-preview";
   
   const prompt = `Create a safe, effective, and detailed ${daysPerWeek}-day workout routine for an Indian user (${level} level) focused on ${goal}. 
   Equipment available: ${equipment}.
@@ -205,7 +187,8 @@ export const generateWorkoutRoutine = async (
 };
 
 export const generateContentIdeas = async (topic: string, platform: string): Promise<ContentIdea[]> => {
-  const model = "gemini-2.5-flash";
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const model = "gemini-3-flash-preview";
   
   const prompt = `Generate 3 high-quality short-form fitness content ideas for ${platform} about "${topic}" tailored for an Indian audience.
   Focus on: Desi fitness struggles, Gym humor in India, or Educational tips for Indian diets.
@@ -253,6 +236,7 @@ export const generateContentIdeas = async (topic: string, platform: string): Pro
 };
 
 export const generateSocialImage = async (imagePrompt: string): Promise<string | null> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const model = "gemini-2.5-flash-image";
   const enhancedPrompt = `Cinematic gym photography in an Indian gym setting, ultra-realistic, high contrast, 8k resolution. ${imagePrompt}`;
 
@@ -276,7 +260,8 @@ export const generateSocialImage = async (imagePrompt: string): Promise<string |
 };
 
 export const analyzeMealImage = async (base64Image: string, mimeType: string): Promise<string> => {
-  const model = "gemini-2.5-flash"; 
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const model = "gemini-3-flash-preview"; 
   try {
     const response = await ai.models.generateContent({
       model,
@@ -296,8 +281,9 @@ export const analyzeMealImage = async (base64Image: string, mimeType: string): P
 };
 
 export const createCoachChat = (language: SupportedLanguage = 'en') => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   return ai.chats.create({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-flash-preview",
     config: {
       systemInstruction: getSystemInstruction(language),
     }

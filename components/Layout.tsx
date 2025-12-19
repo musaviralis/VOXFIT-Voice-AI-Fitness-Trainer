@@ -1,6 +1,7 @@
-
 import React, { useState } from 'react';
-import { NavLink, Link } from 'react-router-dom';
+// Fix: Use namespace import and cast to any to resolve "no exported member" errors
+import * as ReactRouterDom from 'react-router-dom';
+const { NavLink, Link } = ReactRouterDom as any;
 import { Dumbbell, LayoutDashboard, Utensils, MessageSquare, Menu, X, Activity, Clapperboard, Mic, Globe, Crown, Zap, ChevronRight, Star } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
@@ -108,7 +109,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <NavLink
               key={item.path}
               to={item.path}
-              className={({ isActive }) =>
+              className={({ isActive }: any) =>
                 `flex items-center justify-between px-5 py-4 rounded-xl transition-all duration-300 group relative overflow-hidden ${
                   isActive
                     ? 'text-white bg-white/5 border-l-4 border-cyan shadow-lg'
@@ -116,7 +117,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 }`
               }
             >
-              {({ isActive }) => (
+              {({ isActive }: any) => (
                 <>
                   <div className="flex items-center space-x-4 relative z-10">
                     <span className={`${isActive ? 'text-cyan scale-110' : 'text-gray-500 group-hover:text-gray-300'} transition-all duration-300`}>
@@ -146,7 +147,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           ) : (
             <NavLink
               to="/premium"
-              className={({ isActive }) =>
+              className={({ isActive }: any) =>
                 `flex items-center justify-between px-5 py-4 rounded-xl transition-all duration-300 group relative overflow-hidden mt-6 border border-amber-500/20 hover:border-amber-500/50 ${
                   isActive
                     ? 'bg-amber-500/10'
@@ -160,7 +161,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </span>
                 <span className="text-sm font-bold tracking-wide text-amber-500">{t('nav.premium')}</span>
               </div>
-              <div className="bg-amber-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded uppercase">PRO</div>
+              <div className="bg-amber-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wide">PRO</div>
             </NavLink>
           )}
         </nav>
@@ -231,7 +232,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={({ isActive }) =>
+                  className={({ isActive }: any) =>
                     `flex items-center justify-between px-6 py-5 rounded-2xl border transition-all ${
                       isActive 
                       ? 'bg-cyan/10 border-cyan/30 text-white shadow-lg' 
@@ -239,7 +240,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     }`
                   }
                 >
-                  {({ isActive }) => (
+                  {({ isActive }: any) => (
                     <>
                       <div className="flex items-center space-x-4">
                         {item.icon}

@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createCoachChat } from '../services/geminiService';
 import { ChatMessage } from '../types';
+import { GenerateContentResponse } from "@google/genai";
 import { Send, User, Bot, Loader, Sparkles, MoreHorizontal, MessageSquare } from 'lucide-react';
 
 const CoachChat: React.FC = () => {
@@ -43,7 +44,8 @@ const CoachChat: React.FC = () => {
     setIsTyping(true);
 
     try {
-      const result = await chatSessionRef.current.sendMessageStream(userMsg.text);
+      // Fix: sendMessageStream must take a { message } parameter object
+      const result = await chatSessionRef.current.sendMessageStream({ message: userMsg.text });
       let fullResponse = '';
       const botMsgId = (Date.now() + 1).toString();
       
@@ -55,7 +57,9 @@ const CoachChat: React.FC = () => {
       }]);
 
       for await (const chunk of result) {
-        fullResponse += chunk.text;
+        // Fix: Explicitly treat chunk as GenerateContentResponse and use .text property
+        const c = chunk as GenerateContentResponse;
+        fullResponse += c.text;
         setMessages(prev => prev.map(msg => msg.id === botMsgId ? { ...msg, text: fullResponse } : msg));
       }
     } catch (error) {
@@ -81,7 +85,7 @@ const CoachChat: React.FC = () => {
     <div className="h-[calc(100vh-120px)] flex flex-col max-w-5xl mx-auto animate-fade-in pb-4">
       <div className="flex-none mb-6 flex items-center justify-between">
         <div>
-           <h1 className="text-4xl font-black text-white tracking-tight flex items-center gap-3">
+           <h1 className="text-4xl font-black text-white tracking tight flex items-center gap-3">
              Concierge Coach <span className="bg-gradient-to-tr from-primary to-accent p-1.5 rounded-lg"><Sparkles className="text-white fill-white" size={16}/></span>
            </h1>
            <p className="text-gray-400 text-sm font-medium mt-1">24/7 AI Guidance & Support</p>

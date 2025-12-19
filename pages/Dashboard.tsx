@@ -1,148 +1,533 @@
-
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Activity, Zap, Calendar, Mic, ArrowRight, Play, Flame, BarChart3, TrendingUp, Sparkles, BookOpen } from 'lucide-react';
-import { ResponsiveContainer, AreaChart, Area, Tooltip, XAxis } from 'recharts';
+import React, { useState, useEffect } from 'react';
+import * as ReactRouterDom from 'react-router-dom';
+const { Link } = ReactRouterDom as any;
+import { 
+  Activity, Zap, Calendar, Mic, ArrowRight, Play, Flame, 
+  TrendingUp, Sparkles, Target, Trophy, Info, 
+  Dumbbell, HeartPulse, BrainCircuit, Droplets,
+  Clock, ShieldCheck, ChevronRight, Gauge, BarChart3, ScanSearch,
+  Sword, Radio, BatteryMedium, Cpu, Fingerprint, Waves, 
+  ShieldAlert, FastForward, Binary, Terminal, Hexagon, Crosshair,
+  TrendingDown, Eye, Layers, Search, Workflow
+} from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { GoogleGenAI } from "@google/genai";
 
-const mockActivityData = [
-  { day: 'M', val: 40 },
-  { day: 'T', val: 70 },
-  { day: 'W', val: 50 },
-  { day: 'T', val: 90 },
-  { day: 'F', val: 60 },
-  { day: 'S', val: 80 },
-  { day: 'S', val: 40 },
-];
-
-const getGreeting = () => {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good Morning";
-  if (hour < 18) return "Good Afternoon";
-  return "Good Evening";
-};
+// Heatmap: Day 1 is the genesis point
+const heatmapData = Array.from({ length: 28 }, (_, i) => ({
+  day: i + 1,
+  intensity: i === 0 ? 5 : 0, 
+}));
 
 const Dashboard: React.FC = () => {
-  const { t } = useLanguage();
-  const greeting = getGreeting();
+  const { t, language } = useLanguage();
+  const [mantra, setMantra] = useState<string>("Bypassing Neural Inhibitors...");
+  const [strategy, setStrategy] = useState<string>("Analyzing biometric baseline...");
+  const [intel, setIntel] = useState<string>("SYNCING_BIOMETRICS...");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isBooting, setIsBooting] = useState(true);
+  const [systemProgress, setSystemProgress] = useState(0);
 
-  return (
-    <div className="space-y-12 animate-fade-in pb-10">
-      
-      {/* 1. Header & Streak Badge */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h2 className="text-gray-500 font-bold tracking-[0.2em] uppercase text-xs mb-3 flex items-center gap-2">
-             <span className="w-8 h-[1px] bg-cyan/50"></span>
-             {t('dashboard.welcome')}
-          </h2>
-          <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter">
-            {greeting}, <span className="text-transparent bg-clip-text bg-gradient-vox animate-gradient">Athlete</span>
-          </h1>
-        </div>
-        
-        {/* Animated Streak Widget */}
-        <div className="flex items-center space-x-4 glass-panel px-6 py-3 rounded-2xl border-white/10 hover:border-orange-500/30 transition-colors group cursor-pointer shadow-lg shadow-black/20">
-          <div className="relative">
-             <div className="absolute inset-0 bg-orange-500 blur-lg opacity-20 group-hover:opacity-40 transition-opacity animate-pulse"></div>
-             <Flame className="text-orange-500 fill-orange-500" size={28} />
-          </div>
-          <div>
-             <span className="block text-white font-black text-xl leading-none">12</span>
-             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{t('motivation.streak')}</span>
-          </div>
-        </div>
-      </div>
+  useEffect(() => {
+    // High-end boot sequence
+    const bootTimer = setTimeout(() => setIsBooting(false), 3000);
+    const progressInterval = setInterval(() => {
+      setSystemProgress(prev => (prev >= 100 ? 100 : prev + 1.4));
+    }, 25);
 
-      {/* 2. Hero Action Card (Magazine Style) */}
-      <div className="relative overflow-hidden rounded-[2.5rem] border border-white/5 group shadow-2xl transition-all duration-500 hover:shadow-cyan/10">
-        {/* Dynamic Backgrounds */}
-        <div className="absolute inset-0 bg-[#050914] z-0"></div>
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-b from-cyan/10 to-transparent rounded-full blur-[120px] -mr-32 -mt-32 pointer-events-none z-0 opacity-60"></div>
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px] -ml-20 -mb-20 pointer-events-none z-0"></div>
+    const fetchAIData = async () => {
+      try {
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         
-        <div className="relative z-10 p-8 md:p-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-10">
-          <div className="space-y-8 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 bg-white/5 text-white border border-white/10 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest backdrop-blur-md shadow-lg">
-              <span className="w-2 h-2 rounded-full bg-cyan animate-pulse shadow-[0_0_8px_#4deeca]"></span>
-              <span>{t('dashboard.objective')}</span>
+        // Parallel intelligence fetching
+        const [flashRes, proRes] = await Promise.all([
+          ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: "Generate an intense 1-sentence fitness mantra for 'Day 1' of an Indian athlete. Use a mix of English and Hindi. Focus on 'Pehla Kadam' and the courage to start.",
+            config: { temperature: 1.0 }
+          }),
+          ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: "Analyze a fitness journey starting at Day 1. Provide a short 'Neural Projection' for the next 4 weeks. Focus on CNS adaptation, mitochondrial biogenesis, and building a foundation. Use a tactical, elite coaching tone.",
+            config: { 
+              thinkingConfig: { thinkingBudget: 5000 },
+              temperature: 0.8
+            }
+          })
+        ]);
+
+        setMantra(flashRes.text || "Pehla kadam asli jeet hai. Today you conquer the comfort zone.");
+        setStrategy(proRes.text || "Projection: Day 1-7 involves heavy neural mapping. Hypertrophy threshold reached by Day 21.");
+        setIntel("READY_FOR_DEPLOYMENT");
+      } catch (e) {
+        setMantra("Abhi nahi toh kabhi nahi. Day 1 starts now.");
+        setStrategy("Emergency Briefing: Compound movements prioritized for baseline metabolic activation.");
+        setIntel("LOCAL_CACHE_STABLE");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAIData();
+
+    return () => {
+      clearTimeout(bootTimer);
+      clearInterval(progressInterval);
+    };
+  }, [language]);
+
+  if (isBooting) {
+    return (
+      <div className="h-screen fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center space-y-12 overflow-hidden">
+        {/* CRT Scanline & Glitch layers */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.15)_50%),linear-gradient(90deg,rgba(77,238,202,0.03),rgba(59,130,246,0.02),rgba(139,92,246,0.03))] bg-[length:100%_3px,4px_100%] pointer-events-none z-10"></div>
+        <div className="absolute inset-0 bg-grid-pattern opacity-20"></div>
+        
+        <div className="relative z-20 flex flex-col items-center">
+          <div className="relative w-48 h-48 mb-16">
+             <div className="absolute inset-0 border-[6px] border-white/5 rounded-full animate-ping opacity-10"></div>
+             <div className="absolute inset-0 border-[6px] border-cyan/10 rounded-full animate-spin-slow"></div>
+             <div className="absolute inset-4 border-[4px] border-primary/20 rounded-full animate-reverse-spin"></div>
+             <div className="absolute inset-0 flex items-center justify-center">
+                <Fingerprint size={80} className="text-cyan animate-pulse" />
+             </div>
+             {/* Scanning bar */}
+             <div className="absolute top-0 left-0 w-full h-1 bg-cyan shadow-[0_0_20px_#4deeca] animate-[scan_2s_linear_infinite]"></div>
+          </div>
+          
+          <div className="space-y-10 text-center max-w-lg px-10">
+            <div className="flex flex-col items-center">
+               <h2 className="text-6xl font-black text-white tracking-[0.6em] uppercase italic drop-shadow-[0_0_25px_#4deeca] -mr-[0.6em] mb-2">VOX_OS</h2>
+               <span className="text-[10px] text-primary font-black uppercase tracking-[0.8em] -mr-[0.8em] opacity-60">Neural Fitness Intelligence</span>
             </div>
             
-            <div>
-              <h2 className="text-5xl md:text-6xl font-black text-white leading-[0.9] mb-4 tracking-tight">
-                VOXFIT Protocol <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-500 to-white">Leg Day Focus</span>
-              </h2>
-              <div className="flex items-center gap-6 text-gray-400 text-sm font-medium">
-                 <div className="flex items-center gap-2">
-                    <Calendar size={16} className="text-cyan"/>
-                    <span>45 mins</span>
-                 </div>
-                 <div className="flex items-center gap-2">
-                    <Activity size={16} className="text-red-500"/>
-                    <span>High Intensity</span>
-                 </div>
-                 <div className="flex items-center gap-2">
-                    <TrendingUp size={16} className="text-secondary"/>
-                    <span>+200 XP</span>
-                 </div>
-              </div>
+            <div className="w-96 h-1.5 bg-white/5 rounded-full overflow-hidden p-[1px] border border-white/10">
+              <div className="h-full bg-gradient-vox shadow-[0_0_25px_#4deeca] transition-all duration-300 ease-out" style={{ width: `${systemProgress}%` }}></div>
+            </div>
+            
+            <div className="flex justify-between items-center w-full px-2">
+               <span className="text-[9px] font-black text-cyan uppercase tracking-widest animate-pulse">Syncing Biometric Link...</span>
+               <span className="text-white font-mono font-bold text-sm tracking-tighter">{Math.floor(systemProgress)}%</span>
             </div>
           </div>
-
-          <Link 
-            to="/voice" 
-            className="relative group/btn overflow-hidden bg-white text-black hover:text-cyan transition-colors px-12 py-8 rounded-[2rem] font-black text-xl flex flex-col items-center justify-center shadow-[0_0_50px_-10px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <div className="absolute inset-0 bg-gray-100 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-out"></div>
-            <Play className="mb-2 fill-current relative z-10" size={32} />
-            <span className="relative z-10 uppercase tracking-wide text-xs">{t('actions.start_workout')}</span>
-          </Link>
         </div>
       </div>
+    );
+  }
 
-      {/* 3. Daily Drop */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <div className="col-span-1 md:col-span-2 glass-panel p-8 rounded-3xl border border-white/5 relative overflow-hidden flex flex-col justify-between group">
-            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-               <Sparkles size={120} className="text-cyan" />
-            </div>
-            <div>
-               <div className="flex items-center gap-2 mb-4">
-                  <span className="bg-cyan/10 text-cyan text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider border border-cyan/20">VOXFIT Insight</span>
-                  <span className="text-gray-500 text-xs">Today's Tip</span>
-               </div>
-               <h3 className="text-2xl font-bold text-white mb-2 leading-tight">"Consistency Beats Intensity"</h3>
-               <p className="text-gray-400 text-sm leading-relaxed max-w-md">The secret to VOXFIT longevity isn't the hardest single session, but showing up every single time. Discipline is the only supplement that works 100% of the time.</p>
-            </div>
-            <div className="mt-6 flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest group-hover:text-cyan transition-colors cursor-pointer">
-               Read More <ArrowRight size={14} />
-            </div>
-         </div>
-
-         <div className="glass-panel p-0 rounded-3xl flex flex-col items-center justify-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-t from-cyan/5 to-transparent"></div>
-            <div className="p-6 w-full flex justify-between items-center z-10 border-b border-white/5">
-               <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{t('dashboard.load')}</span>
-               <div className="flex items-center gap-1 text-secondary text-xs font-bold">
-                  <TrendingUp size={12} /> +12%
-               </div>
-            </div>
-            <div className="h-32 w-full mt-auto pt-4">
-               <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={mockActivityData}>
-                  <defs>
-                     <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#4deeca" stopOpacity={0.4}/>
-                        <stop offset="95%" stopColor="#4deeca" stopOpacity={0}/>
-                     </linearGradient>
-                  </defs>
-                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill: '#666', fontSize: 10}} dy={-5} interval={0} />
-                  <Area type="monotone" dataKey="val" stroke="#4deeca" strokeWidth={3} fill="url(#colorVal)" />
-                  </AreaChart>
-               </ResponsiveContainer>
-            </div>
+  return (
+    <div className="space-y-12 animate-fade-in pb-32 relative">
+      
+      {/* 0. TACTICAL DATA FEED */}
+      <div className="w-full h-12 glass-panel border-y border-white/5 flex items-center overflow-hidden bg-black/90 relative z-40">
+         <div className="flex animate-[shimmer_50s_linear_infinite] gap-24 items-center px-6">
+            {[1,2,3].map(i => (
+              <div key={i} className="flex items-center gap-12 text-[10px] font-black text-gray-500 uppercase tracking-[0.5em]">
+                 <span className="text-cyan flex items-center gap-2"><Workflow size={14} /> SYSTEM: VOX_PRO_V2</span>
+                 <span className="w-1.5 h-1.5 rounded-full bg-gray-800"></span>
+                 <span className="text-primary flex items-center gap-2"><Binary size={14} /> STATUS: {intel}</span>
+                 <span className="w-1.5 h-1.5 rounded-full bg-gray-800"></span>
+                 <span className="text-secondary flex items-center gap-2"><Crosshair size={14} /> TARGET: PEAK_PERFORMANCE</span>
+                 <span className="w-1.5 h-1.5 rounded-full bg-gray-800"></span>
+                 <span className="text-accent flex items-center gap-2"><Cpu size={14} /> LOAD: 14.4%_NOMINAL</span>
+              </div>
+            ))}
          </div>
       </div>
+
+      {/* 1. HERO COMMAND CENTER */}
+      <header className="grid grid-cols-1 2xl:grid-cols-12 gap-12 p-12 glass-panel rounded-[5rem] relative overflow-hidden group border border-white/10 shadow-[0_100px_200px_-50px_rgba(0,0,0,1)] bg-gradient-to-br from-surface via-background to-[#020308]">
+        <div className="absolute inset-0 bg-grid-pattern opacity-20 pointer-events-none"></div>
+        <div className="absolute -top-[30%] -right-[15%] w-[70%] h-[70%] bg-primary/5 rounded-full blur-[180px] animate-pulse"></div>
+        
+        {/* Mission Identification */}
+        <div className="2xl:col-span-8 flex flex-col justify-between space-y-16 relative z-10">
+          <div className="space-y-10">
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="flex items-center gap-3 px-8 py-3 rounded-full bg-cyan/10 border border-cyan/30 backdrop-blur-3xl shadow-[0_0_40px_rgba(77,238,202,0.15)] group-hover:border-cyan/50 transition-all">
+                  <div className="w-3 h-3 rounded-full bg-cyan animate-ping shadow-[0_0_10px_#4deeca]"></div>
+                  <span className="text-[12px] font-black text-white uppercase tracking-[0.5em]">Active_Phase: Day_01_Initiation</span>
+              </div>
+              <div className="flex items-center gap-3 text-[12px] font-bold text-gray-600 uppercase tracking-[0.3em] px-6 border-l border-white/10">
+                 <Radio size={16} className="text-primary animate-pulse" /> 
+                 <span>Auth: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+              </div>
+            </div>
+            
+            <h1 className="text-[12rem] md:text-[15rem] font-black text-white tracking-tighter leading-[0.7] italic transition-all group-hover:tracking-normal duration-1000">
+              MISSION_<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-vox drop-shadow-[0_0_60px_rgba(77,238,202,0.5)]">START_01</span>
+            </h1>
+          </div>
+
+          {/* Neural Projection (Powered by Gemini 3 Pro) */}
+          <div className="glass-panel p-12 rounded-[3.5rem] border-primary/20 bg-primary/5 max-w-4xl relative overflow-hidden group/forecast hover:bg-primary/10 transition-all shadow-2xl">
+             <div className="absolute top-0 right-0 p-8 opacity-10">
+                <BrainCircuit size={80} className="text-primary group-hover/forecast:rotate-12 transition-transform duration-700" />
+             </div>
+             <div className="flex items-center gap-5 mb-8">
+                <div className="p-3 bg-primary/20 rounded-2xl text-primary shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                  <ShieldAlert size={24} />
+                </div>
+                <div className="space-y-1">
+                   <span className="text-[13px] font-black text-primary uppercase tracking-[0.4em]">Neural Core Projection</span>
+                   <span className="block text-[9px] text-gray-600 font-bold uppercase tracking-widest">Powered by Gemini_3_Pro</span>
+                </div>
+             </div>
+             <p className={`text-gray-100 font-medium leading-relaxed italic text-xl md:text-2xl transition-all duration-1000 ${isLoading ? 'opacity-20 blur-lg scale-95' : 'opacity-100 scale-100'}`}>
+                "{strategy}"
+             </p>
+             <div className="mt-8 flex gap-2">
+                {[1,2,3,4,5,6].map(i => <div key={i} className="h-1 flex-1 bg-white/5 rounded-full overflow-hidden">
+                   <div className="h-full bg-primary animate-[shimmer_3s_infinite]" style={{animationDelay: `${i*0.2}s`}}></div>
+                </div>)}
+             </div>
+          </div>
+        </div>
+
+        {/* Tactical Telemetry Hub */}
+        <div className="2xl:col-span-4 flex flex-col justify-between gap-10 relative z-10">
+           
+           {/* GENESIS STREAK COUNTER - DAY 1 FOCUS */}
+           <div className="glass-panel p-12 rounded-[4rem] border-cyan/40 bg-cyan/5 shadow-[0_0_100px_-20px_rgba(77,238,202,0.3)] relative overflow-hidden group/streak cursor-pointer hover:bg-cyan/10 transition-all border-2">
+              <div className="absolute -top-10 -right-10">
+                 <Hexagon size={240} className="text-cyan opacity-5 animate-spin-slow" />
+              </div>
+              <div className="relative z-10 flex flex-col items-center text-center">
+                 <p className="text-[14px] font-black text-cyan uppercase tracking-[0.6em] mb-6">Mission_Streak</p>
+                 <div className="relative">
+                    <span className="text-[11rem] font-black text-white tracking-tighter leading-none drop-shadow-[0_0_40px_rgba(255,255,255,0.2)]">01</span>
+                    <div className="absolute -inset-8 border-[1px] border-cyan/20 rounded-full animate-ping pointer-events-none"></div>
+                 </div>
+                 <span className="text-4xl font-black text-cyan/40 tracking-tighter -mt-4 italic">GENESIS_DAY</span>
+                 
+                 <div className="mt-12 w-full space-y-6">
+                    <div className="flex justify-between text-[11px] font-black text-gray-500 uppercase tracking-widest">
+                       <span>Compliance Matrix</span>
+                       <span className="text-cyan">3.3% Logged</span>
+                    </div>
+                    <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden border border-white/10 p-[3px]">
+                       <div className="h-full bg-gradient-to-r from-cyan via-primary to-accent w-[3.3%] rounded-full shadow-[0_0_25px_#4deeca]"></div>
+                    </div>
+                 </div>
+              </div>
+           </div>
+
+           <div className="grid grid-cols-2 gap-8">
+              {[
+                { label: 'Neural Uptime', val: '00:02:14', icon: <Clock size={24} /> },
+                { label: 'Output Potential', val: 'Elite', icon: <Zap size={24} /> },
+                { label: 'Metabolic Sync', val: 'READY', icon: <Waves size={24} /> },
+                { label: 'System Integrity', val: '100%', icon: <ShieldCheck size={24} /> },
+              ].map((h, i) => (
+                <div key={i} className="glass-panel p-8 rounded-[2.5rem] flex flex-col justify-between border-white/5 hover:border-cyan/30 transition-all hover:-translate-y-2 hover:bg-white/5 shadow-xl">
+                   <div className="text-primary mb-4 p-3 bg-primary/10 w-fit rounded-2xl shadow-inner">{h.icon}</div>
+                   <div>
+                      <p className="text-white font-black text-3xl tracking-tighter leading-none">{h.val}</p>
+                      <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest mt-3 italic">{h.label}</p>
+                   </div>
+                </div>
+              ))}
+           </div>
+        </div>
+      </header>
+
+      {/* 2. OPERATIONAL PROTOCOL GRID */}
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+         
+         {/* Protocol Deployment Hero */}
+         <div className="lg:col-span-8 relative group">
+            <div className="absolute -inset-4 bg-gradient-vox rounded-[5rem] blur-[100px] opacity-10 group-hover:opacity-20 transition-all duration-1000"></div>
+            <div className="relative h-full rounded-[5rem] overflow-hidden glass-panel border border-white/10 shadow-2xl flex flex-col xl:flex-row">
+               
+               {/* Visual Biometrics Panel */}
+               <div className="w-full xl:w-[420px] bg-black/80 p-14 flex flex-col items-center justify-between border-b xl:border-b-0 xl:border-r border-white/10 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-grid-pattern opacity-15"></div>
+                  
+                  <div className="relative z-10 text-center space-y-16 w-full">
+                    <div className="relative mx-auto w-64 h-64 group-hover:scale-105 transition-transform duration-1000">
+                       <svg viewBox="0 0 100 100" className="w-full h-full">
+                          <circle cx="50" cy="50" r="48" className="stroke-white/5 fill-none" strokeWidth="0.5" strokeDasharray="6 3" />
+                          <circle cx="50" cy="50" r="44" className="stroke-cyan/5 fill-none" strokeWidth="10" />
+                          <circle cx="50" cy="50" r="44" className="stroke-cyan/40 fill-none animate-pulse" strokeWidth="1" strokeDasharray="20 10" />
+                          <path d="M50 6 A44 44 0 0 1 94 50" className="stroke-cyan fill-none" strokeWidth="5" strokeLinecap="round" />
+                          <path d="M50 94 A44 44 0 0 1 6 50" className="stroke-primary fill-none opacity-40" strokeWidth="2" strokeDasharray="5 5" />
+                       </svg>
+                       <div className="absolute inset-0 flex items-center justify-center">
+                          <Activity size={72} className="text-cyan animate-pulse drop-shadow-[0_0_20px_#4deeca]" />
+                       </div>
+                    </div>
+
+                    <div className="space-y-8">
+                       <div className="space-y-3">
+                          <p className="text-[12px] font-black text-gray-600 uppercase tracking-[0.6em]">Biokinetic_Load</p>
+                          <p className="text-5xl font-black text-white italic tracking-tighter">OPTIMAL_STATE</p>
+                       </div>
+                       <div className="flex gap-4 justify-center">
+                          {[1,2,3,4,5,6].map(i => <div key={i} className={`w-5 h-5 rounded-lg ${i === 1 ? 'bg-cyan shadow-[0_0_30px_#4deeca]' : 'bg-white/5 border border-white/10'}`}></div>)}
+                       </div>
+                    </div>
+                  </div>
+
+                  {/* Real-time Waveform */}
+                  <div className="relative z-10 w-full mt-16 p-8 rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-2xl">
+                     <div className="flex justify-between items-center mb-8">
+                        <p className="text-[12px] font-black text-cyan uppercase tracking-widest flex items-center gap-3">
+                           <Waves size={18} /> Telemetry_Amplitude
+                        </p>
+                        <span className="text-[10px] font-mono text-gray-700 animate-pulse">LIVE_FEED</span>
+                     </div>
+                     <div className="h-16 flex items-end gap-2 px-1">
+                        {Array.from({ length: 24 }).map((_, i) => (
+                           <div key={i} className="flex-1 bg-cyan/20 rounded-t-sm animate-[shimmer_2s_infinite_ease-in-out]" style={{ height: `${20 + Math.random() * 80}%`, animationDelay: `${i * 0.08}s` }}></div>
+                        ))}
+                     </div>
+                  </div>
+               </div>
+
+               {/* Tactical Protocol Description */}
+               <div className="flex-1 p-16 lg:p-24 flex flex-col justify-between relative bg-gradient-to-br from-transparent via-primary/5 to-transparent">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-24 opacity-5 pointer-events-none group-hover:opacity-15 transition-all duration-700">
+                     <Dumbbell size={450} className="text-white" />
+                  </div>
+
+                  <div className="space-y-16 relative z-10">
+                    <div className="inline-flex items-center gap-5 bg-accent/20 border border-accent/40 px-10 py-4 rounded-full shadow-[0_0_50px_rgba(139,92,246,0.15)]">
+                       <Sparkles size={24} className="text-accent animate-pulse" />
+                       <span className="text-[14px] font-black text-accent uppercase tracking-[0.5em]">Protocol: GENESIS_ACTIVE</span>
+                    </div>
+                    
+                    <div className="space-y-10">
+                       <h2 className="text-9xl md:text-[11rem] font-black text-white tracking-tighter leading-[0.75] uppercase italic transition-transform group-hover:translate-x-6 duration-700">
+                          GENESIS<br/>
+                          <span className="text-gray-800">SEQUENCE</span>
+                       </h2>
+                       <p className="text-gray-400 text-3xl font-medium max-w-3xl leading-relaxed border-l-[8px] border-cyan/40 pl-12 italic">
+                          "Success is not final; failure is not fatal: it is the courage to continue that counts." Today you set the baseline. Do not negotiate with your resistance.
+                       </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-24 flex flex-col md:flex-row gap-12 relative z-10">
+                     <Link 
+                       to="/voice"
+                       className="flex-[2] bg-white text-black py-10 rounded-[3.5rem] font-black text-3xl uppercase tracking-[0.6em] flex items-center justify-center gap-8 hover:scale-[1.05] active:scale-[0.95] transition-all shadow-[0_50px_120px_-30px_rgba(255,255,255,0.4)] group/btn overflow-hidden relative"
+                     >
+                        <div className="absolute inset-0 bg-gradient-vox opacity-0 group-hover/btn:opacity-10 transition-opacity"></div>
+                        <Play size={40} fill="black" /> Engage_VOX
+                     </Link>
+                     <button className="flex-1 px-14 py-10 rounded-[3.5rem] bg-white/5 border border-white/10 text-white font-black text-[14px] uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-6">
+                        <Info size={28} /> Intel_Brief
+                     </button>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         {/* AI Insights Sidebar */}
+         <div className="lg:col-span-4 glass-panel p-16 rounded-[5rem] border-white/5 relative overflow-hidden flex flex-col justify-center min-h-[550px] group border-accent/20 bg-[#04060E] shadow-3xl">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(139,92,246,0.3),transparent_80%)]"></div>
+            <div className="absolute top-0 right-0 p-20 opacity-5 group-hover:opacity-15 transition-all duration-1000 rotate-[15deg]">
+               <BrainCircuit size={320} className="text-accent" />
+            </div>
+            
+            <div className="relative z-10 space-y-16">
+               <div className="flex items-center gap-8">
+                  <div className="p-6 bg-accent/20 rounded-[2.5rem] text-accent shadow-[0_0_60px_rgba(139,92,246,0.6)] animate-pulse border border-accent/30">
+                     <Sparkles size={48} />
+                  </div>
+                  <div className="space-y-2">
+                     <span className="block text-[14px] font-black text-accent uppercase tracking-[0.6em]">Neural_Link: Elite</span>
+                     <span className="text-[11px] text-gray-700 font-bold uppercase tracking-widest italic">Mission_Protocol_Active</span>
+                  </div>
+               </div>
+               
+               <h3 className={`text-5xl md:text-6xl font-black text-white italic leading-[1.15] transition-all duration-1000 ${isLoading ? 'opacity-20 blur-2xl scale-90' : 'opacity-100 scale-100'}`}>
+                  "{mantra}"
+               </h3>
+
+               <div className="pt-16 space-y-12">
+                  <div className="flex justify-between items-center text-[13px] font-black text-gray-600 uppercase tracking-widest">
+                     <span>Neural_Bandwidth</span>
+                     <span className="text-accent animate-pulse">100% Synced</span>
+                  </div>
+                  <div className="flex gap-4">
+                     {[1,2,3,4,5,6,7,8,9,10,11,12].map(i => (
+                        <div key={i} className="h-3 flex-1 bg-white/5 rounded-full overflow-hidden">
+                           <div className="h-full bg-accent animate-[shimmer_2s_infinite_linear]" style={{animationDelay: `${i*0.08}s`}}></div>
+                        </div>
+                     ))}
+                  </div>
+               </div>
+
+               <div className="p-8 rounded-[2.5rem] bg-black/80 border border-white/5 flex items-center gap-6 group-hover:border-accent/50 transition-all shadow-2xl">
+                  <div className="w-4 h-4 rounded-full bg-accent animate-ping shadow-[0_0_15px_#8b5cf6]"></div>
+                  <p className="text-[12px] font-bold text-gray-500 uppercase tracking-widest leading-relaxed">Forecast: 94% Consistency Probability</p>
+               </div>
+            </div>
+         </div>
+
+      </section>
+
+      {/* 3. PERSISTENCE GRID & GAUGES */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+         
+         {/* GENESIS MATRIX (Heatmap) */}
+         <div className="glass-panel p-16 rounded-[5rem] border-white/5 flex flex-col h-full group relative overflow-hidden bg-[#060810] shadow-2xl border-t-cyan/10">
+            <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
+            <div className="flex items-center justify-between mb-16 relative z-10">
+               <div className="space-y-4">
+                  <h4 className="text-white font-black text-5xl tracking-tighter">Persistence_Log</h4>
+                  <p className="text-[13px] text-gray-600 font-bold uppercase tracking-[0.5em] italic flex items-center gap-4">
+                    <FastForward size={20} className="text-cyan animate-pulse" /> GENESIS_STREAM
+                  </p>
+               </div>
+               <Calendar size={36} className="text-cyan opacity-30 group-hover:opacity-100 transition-opacity duration-500" />
+            </div>
+
+            <div className="grid grid-cols-7 gap-5 relative z-10 flex-1 content-start">
+               {heatmapData.map((d, i) => (
+                  <div 
+                    key={i} 
+                    className={`aspect-square rounded-[1.25rem] transition-all duration-1000 border-2 ${
+                      d.intensity === 0 ? 'bg-white/[0.02] border-white/5' : 
+                      'bg-cyan shadow-[0_0_50px_#4deeca] border-cyan animate-pulse scale-110'
+                    }`}
+                  >
+                     {d.intensity > 0 && <div className="w-full h-full flex items-center justify-center"><Flame size={20} className="text-black fill-black" /></div>}
+                  </div>
+               ))}
+            </div>
+
+            <div className="mt-16 pt-16 border-t border-white/10 relative z-10">
+               <div className="grid grid-cols-2 gap-16">
+                  <div className="text-left">
+                     <p className="text-[13px] text-gray-700 font-bold uppercase tracking-widest mb-4">Total_Vol</p>
+                     <p className="text-white font-black text-6xl">0.0<span className="text-lg text-gray-700 ml-4 font-mono">t</span></p>
+                  </div>
+                  <div className="text-right">
+                     <p className="text-[13px] text-gray-700 font-bold uppercase tracking-widest mb-4">Integrity</p>
+                     <p className="text-cyan font-black text-6xl">100<span className="text-lg text-gray-700 ml-4 font-mono">%</span></p>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         {/* BIO-TELEMETRY HUD */}
+         <div className="glass-panel p-16 rounded-[5rem] border-white/5 space-y-16 group relative overflow-hidden bg-gradient-to-b from-[#0A0E1A] via-[#03050C] to-background shadow-2xl border-t-primary/10">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.25),transparent_75%)]"></div>
+            <h4 className="text-white font-black text-[14px] uppercase tracking-[0.6em] flex items-center gap-6 relative z-10">
+               <Activity size={32} className="text-primary drop-shadow-[0_0_10px_#3b82f6]" /> Live_Biokinetic_Sync
+            </h4>
+            
+            <div className="space-y-14 relative z-10">
+               {[
+                  { label: 'Neural_Adaptation', val: 98, color: 'text-cyan', bg: 'bg-cyan' },
+                  { label: 'Power_Reserves', val: 100, color: 'text-accent', bg: 'bg-accent' },
+                  { label: 'Metabolic_Prime', val: 96, color: 'text-secondary', bg: 'bg-secondary' }
+               ].map((g, i) => (
+                  <div key={i} className="space-y-8">
+                     <div className="flex justify-between items-end">
+                        <span className="text-[14px] font-black uppercase tracking-[0.5em] text-gray-600">{g.label}</span>
+                        <span className={`${g.color} font-mono font-bold text-2xl tracking-tighter`}>{g.val}%</span>
+                     </div>
+                     <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden border border-white/10 p-[5px] shadow-inner">
+                        <div 
+                          className={`h-full rounded-full ${g.bg} transition-all duration-1000 ease-out shadow-[0_0_25px_currentColor]`} 
+                          style={{ width: `${g.val}%`, transitionDelay: `${i * 0.35}s` }}
+                        ></div>
+                     </div>
+                  </div>
+               ))}
+            </div>
+
+            <div className="pt-16 flex justify-center relative z-10">
+               <div className="px-12 py-6 rounded-[3rem] bg-white/5 border border-white/10 flex items-center gap-6 group-hover:bg-white/10 transition-all shadow-2xl backdrop-blur-3xl">
+                  <ShieldCheck size={28} className="text-emerald-500" />
+                  <span className="text-[12px] font-black text-gray-500 uppercase tracking-[0.3em]">Integrity_Check: PASSED</span>
+               </div>
+            </div>
+         </div>
+
+         {/* QUICK ACTION TILES */}
+         <div className="grid grid-cols-1 gap-12 h-full">
+            <Link to="/nutrition" className="glass-panel p-14 rounded-[5rem] border-white/5 hover:border-cyan/70 transition-all group flex items-center justify-between overflow-hidden relative shadow-3xl border-t-cyan/10">
+               <div className="absolute inset-0 bg-gradient-to-r from-cyan/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+               <div className="flex items-center gap-12 relative z-10">
+                  <div className="w-28 h-28 bg-cyan/10 rounded-[3rem] flex items-center justify-center text-cyan group-hover:scale-110 group-hover:rotate-[8deg] transition-all border border-cyan/40 shadow-[0_0_50px_rgba(77,238,202,0.4)]">
+                     <Droplets size={52} />
+                  </div>
+                  <div>
+                     <h5 className="text-white font-black text-4xl tracking-tighter leading-none">Fuel_Core</h5>
+                     <p className="text-[12px] text-gray-600 font-bold uppercase tracking-[0.5em] mt-4 italic">Macro_Log_Active</p>
+                  </div>
+               </div>
+               <div className="p-6 bg-white/5 rounded-full group-hover:bg-cyan group-hover:text-black transition-all shadow-2xl border border-white/10 group-hover:border-cyan">
+                  <ChevronRight size={32} />
+               </div>
+            </Link>
+
+            <Link to="/coach" className="glass-panel p-14 rounded-[5rem] border-white/5 hover:border-accent/70 transition-all group flex items-center justify-between overflow-hidden relative shadow-3xl border-t-accent/10">
+               <div className="absolute inset-0 bg-gradient-to-r from-accent/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+               <div className="flex items-center gap-12 relative z-10">
+                  <div className="w-28 h-28 bg-accent/10 rounded-[3rem] flex items-center justify-center text-accent group-hover:scale-110 group-hover:rotate-[-8deg] transition-all border border-accent/40 shadow-[0_0_50px_rgba(139,92,246,0.4)]">
+                     <BrainCircuit size={52} />
+                  </div>
+                  <div>
+                     <h5 className="text-white font-black text-4xl tracking-tighter leading-none">AI_Consult</h5>
+                     <p className="text-[12px] text-gray-600 font-bold uppercase tracking-[0.5em] mt-4 italic">Neural_Intel_Link</p>
+                  </div>
+               </div>
+               <div className="p-6 bg-white/5 rounded-full group-hover:bg-accent group-hover:text-black transition-all shadow-2xl border border-white/10 group-hover:border-accent">
+                  <ChevronRight size={32} />
+               </div>
+            </Link>
+
+            <div className="glass-panel p-14 rounded-[5rem] border-white/5 flex items-center justify-between overflow-hidden relative opacity-20 cursor-not-allowed grayscale shadow-2xl">
+               <div className="flex items-center gap-12 relative z-10">
+                  <div className="w-28 h-28 bg-amber-500/10 rounded-[3rem] flex items-center justify-center text-amber-500 border border-amber-500/20">
+                     <Trophy size={52} />
+                  </div>
+                  <div>
+                     <h5 className="text-white font-black text-4xl tracking-tighter italic leading-none">Hall_of_Valour</h5>
+                     <p className="text-[12px] text-gray-700 font-bold uppercase tracking-[0.5em] mt-4">Locked: Genesis_Check_Pending</p>
+                  </div>
+               </div>
+               <ShieldCheck size={32} className="text-gray-900" />
+            </div>
+         </div>
+
+      </div>
+
+      {/* 4. SYSTEM TELEMETRY FOOTER */}
+      <footer className="flex flex-col md:flex-row items-center justify-between gap-12 text-[12px] font-black text-gray-900 uppercase tracking-[1em] px-20 pt-24 border-t border-white/5">
+         <div className="flex items-center gap-12">
+            <span className="hover:text-cyan cursor-default transition-all duration-300">VOXFIT_NEURAL_STATION_V2.5</span>
+            <span className="w-4 h-4 rounded-full bg-gray-950 hidden md:block"></span>
+            <span className="hover:text-primary cursor-default transition-all duration-300">BUILD: ALPHA_UNIT_77</span>
+         </div>
+         <div className="flex items-center gap-8 bg-white/5 px-12 py-5 rounded-full border border-white/10 backdrop-blur-3xl shadow-3xl">
+            <div className="w-4 h-4 rounded-full bg-secondary animate-pulse shadow-[0_0_20px_#10b981]"></div>
+            <span className="text-gray-600">Neural_Synchronization: Locked & Stable</span>
+         </div>
+      </footer>
+
+      {/* Floating HUD elements for premium feel */}
+      <div className="fixed bottom-10 left-10 z-50 pointer-events-none hidden 2xl:block opacity-20">
+         <div className="font-mono text-[9px] text-cyan space-y-1">
+            <p>LATENCY: 12ms</p>
+            <p>PACKET_LOSS: 0.00%</p>
+            <p>JITTER: 1.2ms</p>
+         </div>
+      </div>
+      
+      <div className="fixed top-1/2 right-10 -translate-y-1/2 z-50 pointer-events-none hidden 2xl:block opacity-20">
+         <div className="font-mono text-[9px] text-primary rotate-90 space-x-10 flex">
+            <span>X_COORD: 44.122</span>
+            <span>Y_COORD: 19.982</span>
+            <span>Z_COORD: 104.221</span>
+         </div>
+      </div>
+
     </div>
   );
 };

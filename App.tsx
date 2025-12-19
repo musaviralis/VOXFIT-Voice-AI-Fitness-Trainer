@@ -1,6 +1,7 @@
-
 import React from 'react';
-import { Routes, Route, BrowserRouter } from 'react-router-dom';
+import * as ReactRouterDom from 'react-router-dom';
+// Using HashRouter for better stability in varied web environments
+const { Routes, Route, HashRouter } = ReactRouterDom as any;
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import WorkoutGenerator from './pages/WorkoutGenerator';
@@ -16,7 +17,7 @@ const App: React.FC = () => {
   return (
     <LanguageProvider>
       <SubscriptionProvider>
-        <BrowserRouter>
+        <HashRouter>
           <Layout>
             <Routes>
               <Route path="/" element={<Dashboard />} />
@@ -28,7 +29,7 @@ const App: React.FC = () => {
               <Route path="/premium" element={<Premium />} />
             </Routes>
           </Layout>
-        </BrowserRouter>
+        </HashRouter>
       </SubscriptionProvider>
     </LanguageProvider>
   );
