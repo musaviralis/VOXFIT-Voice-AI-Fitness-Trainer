@@ -306,13 +306,13 @@ const VoiceTrainer: React.FC = () => {
           {isConnected && (
             <div 
               className="absolute inset-0 border-4 border-cyan/40 rounded-full opacity-50"
-              style={{ transform: `scale(\${1.2 + audioLevel * 0.2})`, transition: 'transform 0.1s ease-out' }}
+              style={{ transform: `scale(${1.2 + audioLevel * 0.2})`, transition: 'transform 0.1s ease-out' }}
             ></div>
           )}
         </button>
 
         {/* Protocols Dashboard */}
-        <div className={`w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-1000 \${
+        <div className={`w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-1000 ${
           isConnected ? 'opacity-10 pointer-events-none blur-md scale-95' : 'opacity-100 scale-100'
         }`}>
           <ProtocolCard title={t('voice.protocols.warmup')} subtitle={t('guidance.get_ready')} icon={<Zap />} color="text-yellow-500" />
