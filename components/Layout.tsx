@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 // Fix: Use namespace import and cast to any to resolve "no exported member" errors
 import * as ReactRouterDom from 'react-router-dom';
@@ -57,7 +58,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex text-gray-200 font-sans selection:bg-primary/30 selection:text-white overflow-hidden relative">
+    <div className="min-h-[100dvh] h-[100dvh] bg-background flex text-gray-200 font-sans selection:bg-primary/30 selection:text-white overflow-hidden relative">
       
       {/* Global Ambient Background */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
@@ -68,7 +69,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </div>
 
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-80 h-screen z-30 sticky top-0 glass-panel border-r border-white/5 shadow-2xl backdrop-blur-xl">
+      <aside className="hidden md:flex flex-col w-80 h-full z-30 sticky top-0 glass-panel border-r border-white/5 shadow-2xl backdrop-blur-xl">
         <div className="p-8 pb-4">
           <div className="flex items-center space-x-4 mb-10 group cursor-pointer">
             <div className="relative">
@@ -203,7 +204,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 relative h-screen overflow-hidden z-10">
+      <div className="flex-1 flex flex-col min-w-0 relative h-full overflow-hidden z-10">
         
         {/* Mobile Header */}
         <header className="md:hidden absolute top-0 left-0 right-0 z-50 px-4 py-4">
@@ -225,7 +226,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
-          <div className="md:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur-xl pt-28 px-6 pb-6 animate-fade-in flex flex-col">
+          <div className="md:hidden fixed inset-0 z-[60] bg-background/95 backdrop-blur-xl pt-28 px-6 pb-6 animate-fade-in flex flex-col">
             <nav className="space-y-3 flex-1">
               {navItems.map((item) => (
                 <NavLink
@@ -257,7 +258,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Content Scroll Area */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden md:p-10 pt-28 pb-10 px-6 scrollbar-hide relative z-10">
-          <div className="max-w-7xl mx-auto w-full">
+          <div className="max-w-7xl mx-auto w-full h-full">
             {children}
           </div>
         </main>

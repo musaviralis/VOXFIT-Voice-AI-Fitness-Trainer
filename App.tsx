@@ -1,7 +1,8 @@
+
 import React from 'react';
 import * as ReactRouterDom from 'react-router-dom';
 // Using HashRouter for better stability in varied web environments
-const { Routes, Route, HashRouter } = ReactRouterDom as any;
+const { Routes, Route, HashRouter, Navigate } = ReactRouterDom as any;
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import WorkoutGenerator from './pages/WorkoutGenerator';
@@ -27,6 +28,8 @@ const App: React.FC = () => {
               <Route path="/creator" element={<CreatorStudio />} />
               <Route path="/coach" element={<CoachChat />} />
               <Route path="/premium" element={<Premium />} />
+              {/* Catch-all route to prevent matching errors and fix the screen by redirecting home */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Layout>
         </HashRouter>
